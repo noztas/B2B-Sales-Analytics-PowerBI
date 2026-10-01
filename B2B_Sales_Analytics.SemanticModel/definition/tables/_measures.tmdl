@@ -95,45 +95,11 @@ table _measures
 		displayFolder: 4 Time Intelligence
 		lineageTag: 67367750-a1ab-41c5-8cde-ee2352875ad5
 
-	/// Change in Net Sales versus the same period last year.
-	measure 'Net Sales YoY' = IF ( NOT ISBLANK ( [Net Sales PY] ), [Net Sales] - [Net Sales PY] )
-		formatString: +#,0 €;-#,0 €;0 €
-		displayFolder: 4 Time Intelligence
-		lineageTag: 9ce8cf0e-a1f4-4f36-b9ca-d6773e5f4c44
-
 	/// Growth in Net Sales versus the same period last year.
 	measure 'Net Sales YoY %' = DIVIDE ( [Net Sales] - [Net Sales PY], [Net Sales PY] )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: 4 Time Intelligence
 		lineageTag: f0511574-1198-4dc5-a82f-62405cbfada9
-
-	/// Net Sales from 1 January to the current date in context. Blank after the Last Data Date.
-	measure 'Net Sales YTD' =
-			VAR AsOfDate = [Last Data Date]
-			RETURN
-				IF (
-					MIN ( dim_date[date] ) <= AsOfDate,
-					CALCULATE ( [Net Sales], FILTER ( DATESYTD ( dim_date[date] ), dim_date[date] <= AsOfDate ) )
-				)
-		formatString: #,0 €
-		displayFolder: 4 Time Intelligence
-		lineageTag: 1cb6f10f-7fdc-4611-9354-b7d53b45a238
-
-	/// Net Sales YTD for the same period last year.
-	measure 'Net Sales PY YTD' =
-			IF (
-				MIN ( dim_date[date] ) <= [Last Data Date],
-				CALCULATE ( [Net Sales PY], DATESYTD ( dim_date[date] ) )
-			)
-		formatString: #,0 €
-		displayFolder: 4 Time Intelligence
-		lineageTag: 7829755c-fed3-4b66-af8e-df55ed8659d9
-
-	/// Year-to-date growth versus the same period last year.
-	measure 'Net Sales YTD YoY %' = DIVIDE ( [Net Sales YTD] - [Net Sales PY YTD], [Net Sales PY YTD] )
-		formatString: +0.0%;-0.0%;0.0%
-		displayFolder: 4 Time Intelligence
-		lineageTag: ceef8122-b84a-417d-9d09-2987b2d9175f
 
 	/// Gross Margin in the same period last year, capped at the Last Data Date. Blank unless exactly one year is in context (a multi-year comparison would be misleading).
 	measure 'Gross Margin PY' =
@@ -150,12 +116,6 @@ table _measures
 		formatString: 0.0%
 		displayFolder: 4 Time Intelligence
 		lineageTag: 30bb137b-11da-4c42-a36e-0079a978d71b
-
-	/// All customers in the customer master.
-	measure 'Total Customers' = COUNTROWS ( dim_customer )
-		formatString: #,0
-		displayFolder: 5 Customers
-		lineageTag: a0477e92-676b-4269-85f2-9ee05d250993
 
 	/// Customers with at least one order in the period.
 	measure 'Active Customers' = DISTINCTCOUNT ( fact_sales[customer_id] )
@@ -183,12 +143,6 @@ table _measures
 		formatString: #,0 €
 		displayFolder: 5 Customers
 		lineageTag: 0c451307-2412-42f7-b685-c0da8014a00f
-
-	/// Orders in the order-to-cash process (one row per order).
-	measure 'Orders Processed' = COUNTROWS ( fact_order_process )
-		formatString: #,0
-		displayFolder: 6 Order-to-Cash
-		lineageTag: 84ae5300-2883-4de3-8d36-1c43c6f80571
 
 	/// Average calendar days from order to (first) shipment.
 	measure 'Avg Days to Ship' =
@@ -224,12 +178,6 @@ table _measures
 		displayFolder: 6 Order-to-Cash
 		lineageTag: 258cc0bc-633b-4bee-81f0-07be6a1b0f2a
 
-	/// Orders not yet delivered (processing or in transit).
-	measure 'Open Orders' = COUNTROWS ( FILTER ( fact_order_process, ISBLANK ( fact_order_process[delivery_date] ) ) )
-		formatString: #,0
-		displayFolder: 6 Order-to-Cash
-		lineageTag: 509d4865-7721-4630-ae53-02183d17bfc2
-
 	/// Average days from invoice to payment for paid invoices.
 	measure 'Avg Days Invoice to Payment' =
 			AVERAGEX (
@@ -250,19 +198,15 @@ table _measures
 		displayFolder: 6 Order-to-Cash
 		lineageTag: 8449ce30-0e35-420b-821b-71f76b25fc81
 
-	/// Share of paid invoices paid more than 3 days after the due date (invoice date + payment terms). Prepaid orders excluded.
+	/// Share of paid invoices paid more than 3 days after fact_order_process[due_date]. Prepaid orders excluded.
 	measure 'Late Payment %' =
 			VAR Paid =
-				ADDCOLUMNS (
-					FILTER (
-						fact_order_process,
-						NOT ISBLANK ( fact_order_process[pay_date] )
-							&& RELATED ( dim_customer[payment_terms] ) <> "Prepaid"
-					),
-					"@due", fact_order_process[invoice_date]
-						+ SWITCH ( RELATED ( dim_customer[payment_terms] ), "Net 15", 15, "Net 30", 30, "Net 60", 60 )
+				FILTER (
+					fact_order_process,
+					NOT ISBLANK ( fact_order_process[pay_date] )
+						&& RELATED ( dim_customer[payment_terms] ) <> "Prepaid"
 				)
-			VAR LateCount = COUNTROWS ( FILTER ( Paid, fact_order_process[pay_date] > [@due] + 3 ) ) + 0
+			VAR LateCount = COUNTROWS ( FILTER ( Paid, fact_order_process[pay_date] > fact_order_process[due_date] + 3 ) ) + 0
 			RETURN
 				DIVIDE ( LateCount, COUNTROWS ( Paid ) )
 		formatString: 0.0%
@@ -289,19 +233,14 @@ table _measures
 	measure 'Overdue Receivables' =
 			VAR AsOfDate = [Last Data Date]
 			VAR Overdue =
-				SELECTCOLUMNS (
-					FILTER (
-						fact_order_process,
-						NOT ISBLANK ( fact_order_process[invoice_date] )
-							&& ISBLANK ( fact_order_process[pay_date] )
-							&& fact_order_process[invoice_date]
-								+ SWITCH ( RELATED ( dim_customer[payment_terms] ), "Net 15", 15, "Net 30", 30, "Net 60", 60, 0 )
-								< AsOfDate
-					),
-					"@order", fact_order_process[order_id]
+				FILTER (
+					fact_order_process,
+					NOT ISBLANK ( fact_order_process[due_date] )
+						&& ISBLANK ( fact_order_process[pay_date] )
+						&& fact_order_process[due_date] < AsOfDate
 				)
 			RETURN
-				CALCULATE ( [Net Sales], TREATAS ( Overdue, fact_sales[order_id] ) )
+				CALCULATE ( [Net Sales], TREATAS ( SELECTCOLUMNS ( Overdue, "@order", fact_order_process[order_id] ), fact_sales[order_id] ) )
 		formatString: #,0 €
 		displayFolder: 6 Order-to-Cash
 		lineageTag: b5ab6362-9667-4768-b6ac-fdeabcab17da
@@ -523,18 +462,11 @@ table _measures
 			VAR Hi = MAX ( receivable_ageing[Max Days] )
 			VAR OpenItems =
 				FILTER (
-					ADDCOLUMNS (
-						CALCULATETABLE (
-							FILTER (
-								fact_order_process,
-								NOT ISBLANK ( fact_order_process[invoice_date] ) && ISBLANK ( fact_order_process[pay_date] )
-							),
-							REMOVEFILTERS ( dim_date )
-						),
-						"@overdue", INT ( AsOfDate - ( fact_order_process[invoice_date]
-							+ SWITCH ( RELATED ( dim_customer[payment_terms] ), "Net 15", 15, "Net 30", 30, "Net 60", 60, 0 ) ) )
-					),
-					[@overdue] >= Lo && [@overdue] <= Hi
+					CALCULATETABLE ( fact_order_process, REMOVEFILTERS ( dim_date ) ),
+					NOT ISBLANK ( fact_order_process[invoice_date] )
+						&& ISBLANK ( fact_order_process[pay_date] )
+						&& INT ( AsOfDate - fact_order_process[due_date] ) >= Lo
+						&& INT ( AsOfDate - fact_order_process[due_date] ) <= Hi
 				)
 			RETURN
 				CALCULATE (

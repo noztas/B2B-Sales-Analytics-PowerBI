@@ -90,6 +90,13 @@ table fact_order_process
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Invoice date + the customer's payment-term days (Prepaid = 0). The single place where the due-date rule lives.
+	column due_date = IF ( NOT ISBLANK ( fact_order_process[invoice_date] ), fact_order_process[invoice_date] + SWITCH ( RELATED ( dim_customer[payment_terms] ), "Net 15", 15, "Net 30", 30, "Net 60", 60, 0 ) )
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 9f4b304c-050a-4363-8b62-ac62e7d5c60f
+		summarizeBy: none
+
 	partition fact_order_process = m
 		mode: import
 		queryGroup: 03_Facts

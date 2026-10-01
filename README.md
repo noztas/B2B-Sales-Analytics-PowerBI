@@ -9,7 +9,7 @@ mid-sized B2B wholesaler operating in Germany, Austria and Switzerland (DACH).
 
 - **5 report pages** for five audiences: management, sales, key accounts, finance and logistics, marketing and purchasing
 - **Star schema** with 6 fact tables, 6 dimensions and role-playing dates (4 inactive relationships used with `USERELATIONSHIP`)
-- **73 DAX measures** in 9 display folders, every one with a description
+- **66 DAX measures** in 9 display folders, each with a description and each used in the report
 - **Row-level security** by sales region
 - **GDPR-minded:** customer contact data is removed in Power Query, not just hidden
 - **Report as code:** saved as a Power BI Project (PBIP/PBIR + TMDL), so every change is reviewable in Git
@@ -113,6 +113,7 @@ All relationships are many-to-one with single-direction filtering.
 | **Customer contact columns removed** (name, email, phone, street) | GDPR data minimisation (*Datensparsamkeit*): the report never needs them |
 | **Auto date/time off, implicit measures discouraged** | One explicit date table; every number in the report comes from a defined measure |
 | **One parameter (`RawDataPath`) for the data source** | Whoever clones the repo changes one value instead of 21 queries |
+| **One `due_date` column** (invoice date + payment-term days) | The due-date rule lives in one place; late-payment, overdue and ageing measures all reuse it |
 
 ### Measures
 
@@ -121,9 +122,9 @@ All relationships are many-to-one with single-direction filtering.
 | 1 Sales | 7 | Net Sales, Discount %, Avg Order Value |
 | 2 Profitability | 3 | COGS, Gross Margin, Gross Margin % |
 | 3 Targets | 3 | Sales Target, Target Variance, Target Attainment % |
-| 4 Time Intelligence | 8 | Net Sales PY, Net Sales YoY %, Net Sales YTD |
-| 5 Customers | 7 | Active Customers, New Customers, Top 20% Customer Share |
-| 6 Order-to-Cash | 16 | On-Time Delivery %, Late Payment %, Receivables by Ageing |
+| 4 Time Intelligence | 4 | Net Sales PY, Net Sales YoY %, Gross Margin % PY |
+| 5 Customers | 6 | Active Customers, New Customers, Top 20% Customer Share |
+| 6 Order-to-Cash | 14 | On-Time Delivery %, Late Payment %, Receivables by Ageing |
 | 7 Marketing | 9 | Campaign Spend, CTR, CPC, ROAS |
 | 8 Inventory | 5 | Stock Units, Months of Cover, Out-of-Stock Products |
 | 0 Helpers | 15 | Card subtitles and colour measures |
@@ -141,6 +142,31 @@ The role **Regional Access** limits every page to the viewer's sales region:
 
 To test it in Power BI Desktop: **Home → View as → Other user** `katharina.huber@arka.example`,
 tick **Regional Access**. Every page now shows only the Süd region.
+
+### How I validated the numbers
+
+Every page was checked against the live model with DAX queries before it was signed off:
+
+| Check | Result |
+|---|---|
+| Net sales in Power BI = net sales written by the data generator | €50,174,484 in both ✅ |
+| Order totals = sum of their order lines | 0 mismatches ✅ |
+| Every order line finds its customer, product, city and order flag | 0 orphan keys ✅ |
+| One row per order in `fact_order_process` after grouping split shipments | 24,061 rows = 24,061 orders ✅ |
+| Customer tiers add up to total net sales | 45.6% + 18.0% + 25.0% + 11.5% = 100% ✅ |
+| Ageing buckets add up to open and overdue receivables | €3,360,342 open, of which €656,018 overdue ✅ |
+| Overdue card on Order-to-Cash = overdue ageing buckets | €656K in both ✅ |
+| Row-level security | *View as* a regional manager shows only that region ✅ |
+
+Bugs found and fixed this way: late-payment rate showing blank instead of 0% for punctual customers,
+campaign budget counting campaigns from both years, a +147% "growth" when all years were selected, and
+an inventory table that Power BI silently excluded from refresh.
+
+### What I'd do next
+
+- Replace the last-year measures with a **calculation group** for time intelligence (one definition for every measure).
+- Turn the fixed business rules (7-day delivery target, 3-day payment grace period) into **parameters** the business can change.
+- Publish to the Power BI service and set up a **scheduled refresh** and **deployment pipeline** (dev → test → prod).
 
 ---
 
