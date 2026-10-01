@@ -1,0 +1,120 @@
+table fact_order_process
+	lineageTag: f6559ad5-906b-4fee-87e4-1c396ff98273
+
+	column order_id
+		dataType: string
+		lineageTag: e0b2e41b-1ca3-4019-9ae0-f4b781d7227d
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id
+		dataType: int64
+		formatString: 0
+		lineageTag: d324033d-ef7f-420d-a648-43fc8dd76b81
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: e2b9b9a0-1835-4ee8-a0f7-86dfe3dc9dd3
+		summarizeBy: none
+		sourceColumn: order_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ship_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: e1851e13-d3b5-47db-9d90-3059ea59b3a8
+		summarizeBy: none
+		sourceColumn: ship_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column delivery_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: bf1c1c8d-f37f-447c-9106-5a9e013b69f4
+		summarizeBy: none
+		sourceColumn: delivery_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column invoice_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 5b9265dd-6175-4cb3-8bef-b5e6ec9c8ed2
+		summarizeBy: none
+		sourceColumn: invoice_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column pay_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 4aaa7556-6ee7-4edc-ab24-f210bd3b682a
+		summarizeBy: none
+		sourceColumn: pay_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column order_to_pay = DATEDIFF(fact_order_process[order_date], fact_order_process[pay_date], DAY)
+		formatString: 0
+		lineageTag: 093835aa-deb8-480b-b105-92e7975c9619
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_order_process = m
+		mode: import
+		queryGroup: 03_Facts
+		source =
+				let
+				    Source = orders,
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"CustomerCity", "RegionName", "ShipToCity", "BillToCity", "OrderChannel", "Status", "Priority", "OrderTotal"}),
+				    #"Merged Queries" = Table.NestedJoin(#"Removed Columns", {"CustomerName"}, dim_customer, {"customer_name"}, "dim_customer", JoinKind.LeftOuter),
+				    #"Expanded dim_customer" = Table.ExpandTableColumn(#"Merged Queries", "dim_customer", {"customer_id"}, {"dim_customer.customer_id"}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Expanded dim_customer",{"OrderID", "dim_customer.customer_id", "CustomerName", "OrderDate"}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Reordered Columns",{"CustomerName"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Removed Columns1", {"OrderID"}, shipments, {"OrderID"}, "shipments", JoinKind.LeftOuter),
+				    #"Expanded shipments" = Table.ExpandTableColumn(#"Merged Queries1", "shipments", {"ShipDate", "DeliveryDate"}, {"shipments.ShipDate", "shipments.DeliveryDate"}),
+				    #"Merged Queries2" = Table.NestedJoin(#"Expanded shipments", {"OrderID"}, INVOICES, {"OrderID"}, "INVOICES", JoinKind.LeftOuter),
+				    #"Expanded INVOICES1" = Table.ExpandTableColumn(#"Merged Queries2", "INVOICES", {"InvoiceID", "InvoiceDate"}, {"INVOICES.InvoiceID", "INVOICES.InvoiceDate"}),
+				    #"Reordered Columns1" = Table.ReorderColumns(#"Expanded INVOICES1",{"OrderID", "dim_customer.customer_id", "OrderDate", "shipments.ShipDate", "shipments.DeliveryDate", "INVOICES.InvoiceDate", "INVOICES.InvoiceID"}),
+				    #"Merged Queries3" = Table.NestedJoin(#"Reordered Columns1", {"INVOICES.InvoiceID"}, payments, {"InvoiceID"}, "payments", JoinKind.LeftOuter),
+				    #"Expanded payments" = Table.ExpandTableColumn(#"Merged Queries3", "payments", {"PayDate"}, {"payments.PayDate"}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Expanded payments",{"INVOICES.InvoiceID"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns2",{{"OrderID", "order_id"}, {"dim_customer.customer_id", "customer_id"}, {"OrderDate", "order_date"}, {"shipments.ShipDate", "ship_date"}, {"shipments.DeliveryDate", "delivery_date"}, {"INVOICES.InvoiceDate", "invoice_date"}, {"payments.PayDate", "pay_date"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"order_date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

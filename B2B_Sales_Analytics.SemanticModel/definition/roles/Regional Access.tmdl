@@ -1,0 +1,7 @@
+role 'Regional Access'
+	modelPermission: read
+
+	tablePermission dim_customer = [region] = LOOKUPVALUE(security[region], security[email], USERPRINCIPALNAME())
+
+	annotation PBI_Id = ad2df493cb634cae9e88e9bfd823f68c
+

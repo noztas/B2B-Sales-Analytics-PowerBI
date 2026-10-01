@@ -1,0 +1,483 @@
+cultureInfo en-US
+
+	linguisticMetadata =
+			{
+			  "Version": "2.0.0",
+			  "Language": "en-US",
+			  "Entities": {
+			    "dim_customer.region": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_customer",
+			          "ConceptualProperty": "region"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Region": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_customer.segment": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_customer",
+			          "ConceptualProperty": "segment"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Segment": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_customer.customer_name": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_customer",
+			          "ConceptualProperty": "customer_name"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Customer": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_date.year": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_date",
+			          "ConceptualProperty": "year"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_date.month_year": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_date",
+			          "ConceptualProperty": "Month Year"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Month": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.net_sales_yoy_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Net Sales YoY %"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Growth vs LY": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Growth vs last year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.gross_margin_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Gross Margin %"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "This year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.gross_margin__py": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Gross Margin % PY"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Last year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_product.category": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_product",
+			          "ConceptualProperty": "category"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Category": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_product.subcategory": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_product",
+			          "ConceptualProperty": "subcategory"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Subcategory": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_customer.account_manager": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_customer",
+			          "ConceptualProperty": "account_manager"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Account Manager": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "customer_tier.tier": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "customer_tier",
+			          "ConceptualProperty": "Tier"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Customer tier": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.receivables_by_ageing": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Receivables by Ageing"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Open receivables": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.avg_days_to_pay_by_payment_date": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Avg Days to Pay by Payment Date"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Days to get paid": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.avg_days_in_step": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Avg Days in Step"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Average days": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "receivable_ageing.bucket": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "receivable_ageing",
+			          "ConceptualProperty": "Bucket"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Days overdue": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "process_step.step": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "process_step",
+			          "ConceptualProperty": "Step"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Step": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.campaign_budget": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Campaign Budget"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Budget": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.campaign_spend": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Campaign Spend"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Spend": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "table_measures.campaign_sales": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "_measures",
+			          "ConceptualProperty": "Campaign Sales"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Attributed sales": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_campaign.campaign_name": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_campaign",
+			          "ConceptualProperty": "campaign_name"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Campaign": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dim_campaign.channel": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_campaign",
+			          "ConceptualProperty": "channel"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Channel": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    }
+			  }
+			}
+		contentType: json
+

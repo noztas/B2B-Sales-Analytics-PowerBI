@@ -1,0 +1,36 @@
+/// Customer tiers for concentration analysis: customers ranked by net sales in the current filter context.
+table customer_tier
+	lineageTag: 453932d9-6d39-47c0-b5e6-733d45b79f00
+
+	column Tier
+		dataType: string
+		lineageTag: 3307d824-0046-4262-b57b-db6ced921346
+		summarizeBy: none
+		sourceColumn: [Tier]
+		sortByColumn: 'Tier Order'
+
+	column 'Tier Order'
+		dataType: int64
+		isHidden
+		lineageTag: 50aff6e4-1f40-48f1-91f3-69ef0c08f1a3
+		summarizeBy: none
+		sourceColumn: [Tier Order]
+
+	column Lower
+		dataType: double
+		isHidden
+		lineageTag: 2f75e040-27f8-4d68-815f-3fed407064f4
+		summarizeBy: none
+		sourceColumn: [Lower]
+
+	column Upper
+		dataType: double
+		isHidden
+		lineageTag: 40f651da-db51-4f48-9f84-35f0fa8d7bb8
+		summarizeBy: none
+		sourceColumn: [Upper]
+
+	partition customer_tier = calculated
+		mode: import
+		source = DATATABLE ( "Tier", STRING, "Tier Order", INTEGER, "Lower", DOUBLE, "Upper", DOUBLE, { { "Top 10%", 1, 0, 0.1 }, { "Next 10%", 2, 0.1, 0.2 }, { "Next 30%", 3, 0.2, 0.5 }, { "Bottom 50%", 4, 0.5, 1 } } )
+

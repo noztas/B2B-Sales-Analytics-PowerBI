@@ -1,0 +1,22 @@
+/// Steps of the order-to-cash process, used to chart the average days per step.
+table process_step
+	lineageTag: ff176d16-f335-4687-9acf-8236d02f1645
+
+	column Step
+		dataType: string
+		lineageTag: 0f0c6cbd-6436-49c7-80df-b52f155aeee3
+		summarizeBy: none
+		sourceColumn: [Step]
+		sortByColumn: 'Step Order'
+
+	column 'Step Order'
+		dataType: int64
+		isHidden
+		lineageTag: cf7e859d-93a5-4dee-96ad-232f77027c60
+		summarizeBy: none
+		sourceColumn: [Step Order]
+
+	partition process_step = calculated
+		mode: import
+		source = DATATABLE ( "Step", STRING, "Step Order", INTEGER, { { "Order → Ship", 1 }, { "Ship → Deliver", 2 }, { "Invoice → Pay", 3 } } )
+

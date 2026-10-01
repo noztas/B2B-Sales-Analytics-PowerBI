@@ -1,0 +1,62 @@
+table dim_date
+	lineageTag: b928bd15-b662-4e60-85f2-5fca2193911c
+	dataCategory: Time
+
+	column date
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: c7c8e879-a028-4a4e-9bee-3460b7c19312
+		summarizeBy: none
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column year = YEAR(dim_date[date])
+		formatString: 0
+		lineageTag: 0862f4c8-c58d-4251-abc4-327e12472ba0
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column month = MONTH(dim_date[date])
+		formatString: 0
+		lineageTag: a73ff59c-be46-421f-b661-b946b969b5cb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter = "Qtr " & QUARTER(dim_date[Date])
+		lineageTag: 47a1ef02-e14d-494b-beaf-a2099592e3c2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Short month name (Jan, Feb, ...), sorted by month number.
+	column 'Month Name' = FORMAT ( dim_date[date], "MMM" )
+		dataType: string
+		lineageTag: 5e2017b9-d7e9-464d-95dc-cc60eef2ea4a
+		summarizeBy: none
+		sortByColumn: month
+
+	/// Month and year label for chart axes (Jan 2025, Feb 2025, ...), sorted chronologically.
+	column 'Month Year' = FORMAT ( dim_date[date], "MMM YYYY" )
+		dataType: string
+		lineageTag: a6456349-2727-4595-a7a6-ea64d485c931
+		summarizeBy: none
+		sortByColumn: 'Year Month Key'
+
+	/// Sort key for Month Year (202501, 202502, ...).
+	column 'Year Month Key' = dim_date[year] * 100 + dim_date[month]
+		dataType: int64
+		isHidden
+		lineageTag: 33422968-aea6-4ebc-8161-c04d6854e271
+		summarizeBy: none
+
+	partition dim_date = calculated
+		mode: import
+		source = CALENDARAUTO()
+
+	annotation PBI_Id = 534065b04726421c991151fe472e9ab7
+

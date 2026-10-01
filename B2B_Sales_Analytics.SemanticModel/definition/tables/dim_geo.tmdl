@@ -1,0 +1,45 @@
+table dim_geo
+	lineageTag: f0c68f32-fdaa-4cac-9eba-cc99726cb424
+
+	column geo_key
+		dataType: int64
+		formatString: 0
+		lineageTag: e1388037-3461-42e4-afe8-28317da6cd53
+		summarizeBy: none
+		sourceColumn: geo_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column CityName
+		dataType: string
+		lineageTag: 636f3271-f59b-4d64-bd6e-0c71517a0470
+		summarizeBy: none
+		sourceColumn: CityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegionName
+		dataType: string
+		lineageTag: cc664919-db64-4cbc-9294-3bfe3bac2db6
+		summarizeBy: none
+		sourceColumn: RegionName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_geo = m
+		mode: import
+		queryGroup: 02_Dims
+		source =
+				let
+				    Source = cities,
+				    #"Removed Duplicates" = Table.Distinct(Source),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "geo_key"}}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Renamed Columns",{"geo_key", "CityName", "RegionName"})
+				in
+				    #"Reordered Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

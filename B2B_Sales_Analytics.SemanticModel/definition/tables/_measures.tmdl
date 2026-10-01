@@ -1,0 +1,630 @@
+table _measures
+	lineageTag: d8cb45c0-4cb9-41e3-82eb-79c9b858407f
+
+	/// Latest order date in the data (28 Sep 2026). Used as the "as of" date so time comparisons stay like-for-like.
+	measure 'Last Data Date' = CALCULATE ( MAX ( fact_sales[order_date] ), REMOVEFILTERS () )
+		formatString: dd.MM.yyyy
+		displayFolder: 0 Helpers
+		lineageTag: fd8b534e-f956-436e-803a-2b69c59fcae0
+
+	/// Revenue before discounts: quantity × unit price.
+	measure 'Gross Sales' = SUMX ( fact_sales, fact_sales[quantity] * fact_sales[unit_price] )
+		formatString: #,0 €
+		displayFolder: 1 Sales
+		lineageTag: cfc7b9b5-bcbf-42b3-8c69-7fee07f801e0
+
+	/// Revenue after discounts (Nettoumsatz). The main revenue KPI of the report.
+	measure 'Net Sales' = SUM ( fact_sales[line_total] )
+		formatString: #,0 €
+		displayFolder: 1 Sales
+		lineageTag: b6ef06db-6608-4b94-889f-6a9c2b3915f3
+
+	/// Value of discounts granted: Gross Sales − Net Sales.
+	measure 'Discount Amount' = [Gross Sales] - [Net Sales]
+		formatString: #,0 €
+		displayFolder: 1 Sales
+		lineageTag: 79fac8ec-522f-452d-bb15-7f5f14d46f29
+
+	/// Discounts as a share of Gross Sales.
+	measure 'Discount %' = DIVIDE ( [Discount Amount], [Gross Sales] )
+		formatString: 0.0%
+		displayFolder: 1 Sales
+		lineageTag: 294e5c74-9b48-499a-aa4f-e02fb70b505a
+
+	/// Number of distinct orders.
+	measure Orders = DISTINCTCOUNT ( fact_sales[order_id] )
+		formatString: #,0
+		displayFolder: 1 Sales
+		lineageTag: a5cb1e4f-d145-43a0-be2b-654bc7fba239
+
+	/// Total units sold.
+	measure 'Units Sold' = SUM ( fact_sales[quantity] )
+		formatString: #,0
+		displayFolder: 1 Sales
+		lineageTag: 5ced1bc6-3033-41a1-ba0a-ecdf388f3d2e
+
+	/// Average net revenue per order.
+	measure 'Avg Order Value' = DIVIDE ( [Net Sales], [Orders] )
+		formatString: #,0 €
+		displayFolder: 1 Sales
+		lineageTag: 089a0f54-2e1e-48cf-b6ad-48177b4c9fd9
+
+	/// Cost of goods sold: quantity × unit cost.
+	measure COGS = SUMX ( fact_sales, fact_sales[quantity] * fact_sales[cost] )
+		formatString: #,0 €
+		displayFolder: 2 Profitability
+		lineageTag: f7ad6675-44fc-4012-a2db-2d4bcb62b03f
+
+	/// Net Sales − COGS (Rohertrag).
+	measure 'Gross Margin' = [Net Sales] - [COGS]
+		formatString: #,0 €
+		displayFolder: 2 Profitability
+		lineageTag: 112be0cf-ece6-4d26-ac88-16ef4a22f5e8
+
+	/// Gross Margin as a share of Net Sales.
+	measure 'Gross Margin %' = DIVIDE ( [Gross Margin], [Net Sales] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 00049c82-bfea-4b21-9956-69e02c6e516d
+
+	/// Planned revenue. Targets are set per month, so use this at month level or above.
+	measure 'Sales Target' = SUM ( fact_sales_target[target_revenue] )
+		formatString: #,0 €
+		displayFolder: 3 Targets
+		lineageTag: 9275f0a4-0ee2-48a3-9c8f-9df89f1a0d4e
+
+	/// Net Sales − Sales Target. Positive means ahead of plan.
+	measure 'Target Variance' = IF ( NOT ISBLANK ( [Sales Target] ), [Net Sales] - [Sales Target] )
+		formatString: +#,0 €;-#,0 €;0 €
+		displayFolder: 3 Targets
+		lineageTag: 7ecf6adc-974f-4156-9c7b-f9519424f460
+
+	/// Net Sales as a share of Sales Target.
+	measure 'Target Attainment %' = DIVIDE ( [Net Sales], [Sales Target] )
+		formatString: 0.0%
+		displayFolder: 3 Targets
+		lineageTag: df053c95-df77-436c-8f98-a4c316302a9c
+
+	/// Net Sales in the same period last year, capped at the Last Data Date so a partial year is compared like-for-like. Blank unless exactly one year is in context (a multi-year comparison would be misleading).
+	measure 'Net Sales PY' =
+			VAR AsOfDate = [Last Data Date]
+			VAR PeriodDates = FILTER ( VALUES ( dim_date[date] ), dim_date[date] <= AsOfDate )
+			RETURN
+				IF ( HASONEVALUE ( dim_date[year] ), CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( PeriodDates ) ) )
+		formatString: #,0 €
+		displayFolder: 4 Time Intelligence
+		lineageTag: 67367750-a1ab-41c5-8cde-ee2352875ad5
+
+	/// Change in Net Sales versus the same period last year.
+	measure 'Net Sales YoY' = IF ( NOT ISBLANK ( [Net Sales PY] ), [Net Sales] - [Net Sales PY] )
+		formatString: +#,0 €;-#,0 €;0 €
+		displayFolder: 4 Time Intelligence
+		lineageTag: 9ce8cf0e-a1f4-4f36-b9ca-d6773e5f4c44
+
+	/// Growth in Net Sales versus the same period last year.
+	measure 'Net Sales YoY %' = DIVIDE ( [Net Sales] - [Net Sales PY], [Net Sales PY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 4 Time Intelligence
+		lineageTag: f0511574-1198-4dc5-a82f-62405cbfada9
+
+	/// Net Sales from 1 January to the current date in context. Blank after the Last Data Date.
+	measure 'Net Sales YTD' =
+			VAR AsOfDate = [Last Data Date]
+			RETURN
+				IF (
+					MIN ( dim_date[date] ) <= AsOfDate,
+					CALCULATE ( [Net Sales], FILTER ( DATESYTD ( dim_date[date] ), dim_date[date] <= AsOfDate ) )
+				)
+		formatString: #,0 €
+		displayFolder: 4 Time Intelligence
+		lineageTag: 1cb6f10f-7fdc-4611-9354-b7d53b45a238
+
+	/// Net Sales YTD for the same period last year.
+	measure 'Net Sales PY YTD' =
+			IF (
+				MIN ( dim_date[date] ) <= [Last Data Date],
+				CALCULATE ( [Net Sales PY], DATESYTD ( dim_date[date] ) )
+			)
+		formatString: #,0 €
+		displayFolder: 4 Time Intelligence
+		lineageTag: 7829755c-fed3-4b66-af8e-df55ed8659d9
+
+	/// Year-to-date growth versus the same period last year.
+	measure 'Net Sales YTD YoY %' = DIVIDE ( [Net Sales YTD] - [Net Sales PY YTD], [Net Sales PY YTD] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 4 Time Intelligence
+		lineageTag: ceef8122-b84a-417d-9d09-2987b2d9175f
+
+	/// Gross Margin in the same period last year, capped at the Last Data Date. Blank unless exactly one year is in context (a multi-year comparison would be misleading).
+	measure 'Gross Margin PY' =
+			VAR AsOfDate = [Last Data Date]
+			VAR PeriodDates = FILTER ( VALUES ( dim_date[date] ), dim_date[date] <= AsOfDate )
+			RETURN
+				IF ( HASONEVALUE ( dim_date[year] ), CALCULATE ( [Gross Margin], SAMEPERIODLASTYEAR ( PeriodDates ) ) )
+		formatString: #,0 €
+		displayFolder: 4 Time Intelligence
+		lineageTag: 42279c4e-bda8-4524-9c58-e1ce8096297d
+
+	/// Gross Margin % in the same period last year.
+	measure 'Gross Margin % PY' = DIVIDE ( [Gross Margin PY], [Net Sales PY] )
+		formatString: 0.0%
+		displayFolder: 4 Time Intelligence
+		lineageTag: 30bb137b-11da-4c42-a36e-0079a978d71b
+
+	/// All customers in the customer master.
+	measure 'Total Customers' = COUNTROWS ( dim_customer )
+		formatString: #,0
+		displayFolder: 5 Customers
+		lineageTag: a0477e92-676b-4269-85f2-9ee05d250993
+
+	/// Customers with at least one order in the period.
+	measure 'Active Customers' = DISTINCTCOUNT ( fact_sales[customer_id] )
+		formatString: #,0
+		displayFolder: 5 Customers
+		lineageTag: c9c96d55-5092-4a48-93d0-81acad257853
+
+	/// Customers whose first order falls in the period. The data starts in January 2025, so every customer counts as new in 2025. Use from 2026.
+	measure 'New Customers' =
+			VAR PeriodStart = MIN ( dim_date[date] )
+			VAR PeriodEnd = MAX ( dim_date[date] )
+			VAR FirstOrders =
+				ADDCOLUMNS (
+					VALUES ( fact_sales[customer_id] ),
+					"@first", CALCULATE ( MIN ( fact_sales[order_date] ), REMOVEFILTERS ( dim_date ) )
+				)
+			RETURN
+				COUNTROWS ( FILTER ( FirstOrders, [@first] >= PeriodStart && [@first] <= PeriodEnd ) )
+		formatString: #,0
+		displayFolder: 5 Customers
+		lineageTag: 6b3e0490-2dfd-4538-bbeb-9b0fe51f18ca
+
+	/// Average Net Sales per active customer.
+	measure 'Net Sales per Customer' = DIVIDE ( [Net Sales], [Active Customers] )
+		formatString: #,0 €
+		displayFolder: 5 Customers
+		lineageTag: 0c451307-2412-42f7-b685-c0da8014a00f
+
+	/// Orders in the order-to-cash process (one row per order).
+	measure 'Orders Processed' = COUNTROWS ( fact_order_process )
+		formatString: #,0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 84ae5300-2883-4de3-8d36-1c43c6f80571
+
+	/// Average calendar days from order to (first) shipment.
+	measure 'Avg Days to Ship' =
+			AVERAGEX (
+				FILTER ( fact_order_process, NOT ISBLANK ( fact_order_process[ship_date] ) ),
+				DATEDIFF ( fact_order_process[order_date], fact_order_process[ship_date], DAY )
+			)
+		formatString: 0.0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 01f03a74-b221-4c50-97d2-48f102d4138e
+
+	/// Average calendar days from order to final delivery.
+	measure 'Avg Days to Deliver' =
+			AVERAGEX (
+				FILTER ( fact_order_process, NOT ISBLANK ( fact_order_process[delivery_date] ) ),
+				DATEDIFF ( fact_order_process[order_date], fact_order_process[delivery_date], DAY )
+			)
+		formatString: 0.0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: cfa6b22a-c7cc-4b86-a6de-8cca48229c14
+
+	/// Share of delivered orders that arrived within 7 calendar days of the order (service-level target).
+	measure 'On-Time Delivery %' =
+			VAR Delivered = FILTER ( fact_order_process, NOT ISBLANK ( fact_order_process[delivery_date] ) )
+			RETURN
+				DIVIDE (
+					COUNTROWS (
+						FILTER ( Delivered, DATEDIFF ( fact_order_process[order_date], fact_order_process[delivery_date], DAY ) <= 7 )
+					),
+					COUNTROWS ( Delivered )
+				)
+		formatString: 0.0%
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 258cc0bc-633b-4bee-81f0-07be6a1b0f2a
+
+	/// Orders not yet delivered (processing or in transit).
+	measure 'Open Orders' = COUNTROWS ( FILTER ( fact_order_process, ISBLANK ( fact_order_process[delivery_date] ) ) )
+		formatString: #,0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 509d4865-7721-4630-ae53-02183d17bfc2
+
+	/// Average days from invoice to payment for paid invoices.
+	measure 'Avg Days Invoice to Payment' =
+			AVERAGEX (
+				FILTER ( fact_order_process, NOT ISBLANK ( fact_order_process[pay_date] ) ),
+				DATEDIFF ( fact_order_process[invoice_date], fact_order_process[pay_date], DAY )
+			)
+		formatString: 0.0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: ba39ed8d-325a-481e-a05c-504899796fd2
+
+	/// Average days from order to cash received (full order-to-cash cycle).
+	measure 'Avg Days Order to Cash' =
+			AVERAGEX (
+				FILTER ( fact_order_process, NOT ISBLANK ( fact_order_process[pay_date] ) ),
+				DATEDIFF ( fact_order_process[order_date], fact_order_process[pay_date], DAY )
+			)
+		formatString: 0.0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 8449ce30-0e35-420b-821b-71f76b25fc81
+
+	/// Share of paid invoices paid more than 3 days after the due date (invoice date + payment terms). Prepaid orders excluded.
+	measure 'Late Payment %' =
+			VAR Paid =
+				ADDCOLUMNS (
+					FILTER (
+						fact_order_process,
+						NOT ISBLANK ( fact_order_process[pay_date] )
+							&& RELATED ( dim_customer[payment_terms] ) <> "Prepaid"
+					),
+					"@due", fact_order_process[invoice_date]
+						+ SWITCH ( RELATED ( dim_customer[payment_terms] ), "Net 15", 15, "Net 30", 30, "Net 60", 60 )
+				)
+			VAR LateCount = COUNTROWS ( FILTER ( Paid, fact_order_process[pay_date] > [@due] + 3 ) ) + 0
+			RETURN
+				DIVIDE ( LateCount, COUNTROWS ( Paid ) )
+		formatString: 0.0%
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 76d6d861-f1d6-43a0-9704-49ccc5a24dc4
+
+	/// Invoiced but unpaid order value (Offene Posten), for orders in the period.
+	measure 'Open Receivables' =
+			VAR OpenOrders =
+				SELECTCOLUMNS (
+					FILTER (
+						fact_order_process,
+						NOT ISBLANK ( fact_order_process[invoice_date] ) && ISBLANK ( fact_order_process[pay_date] )
+					),
+					"@order", fact_order_process[order_id]
+				)
+			RETURN
+				CALCULATE ( [Net Sales], TREATAS ( OpenOrders, fact_sales[order_id] ) )
+		formatString: #,0 €
+		displayFolder: 6 Order-to-Cash
+		lineageTag: b2f18748-5329-498c-a078-ea2856e1c10f
+
+	/// Open receivables already past their due date as of the Last Data Date.
+	measure 'Overdue Receivables' =
+			VAR AsOfDate = [Last Data Date]
+			VAR Overdue =
+				SELECTCOLUMNS (
+					FILTER (
+						fact_order_process,
+						NOT ISBLANK ( fact_order_process[invoice_date] )
+							&& ISBLANK ( fact_order_process[pay_date] )
+							&& fact_order_process[invoice_date]
+								+ SWITCH ( RELATED ( dim_customer[payment_terms] ), "Net 15", 15, "Net 30", 30, "Net 60", 60, 0 )
+								< AsOfDate
+					),
+					"@order", fact_order_process[order_id]
+				)
+			RETURN
+				CALCULATE ( [Net Sales], TREATAS ( Overdue, fact_sales[order_id] ) )
+		formatString: #,0 €
+		displayFolder: 6 Order-to-Cash
+		lineageTag: b5ab6362-9667-4768-b6ac-fdeabcab17da
+
+	/// Overdue share of open receivables.
+	measure 'Overdue %' = DIVIDE ( [Overdue Receivables], [Open Receivables] )
+		formatString: 0.0%
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 22de0b51-7e5a-4d0a-9813-71ddc29dbe7d
+
+	/// Actual marketing spend.
+	measure 'Campaign Spend' = SUM ( fact_campaign_spend[spend] )
+		formatString: #,0 €
+		displayFolder: 7 Marketing
+		lineageTag: 7f7e673a-e48e-4435-a3e2-74badf7ec033
+
+	/// Planned budget of the campaigns that have spend in the current filters (campaigns are not linked to the date table, so a plain SUM would count every campaign).
+	measure 'Campaign Budget' = SUMX ( FILTER ( VALUES ( dim_campaign[campaign_key] ), NOT ISBLANK ( [Campaign Spend] ) ), CALCULATE ( MAX ( dim_campaign[budget] ) ) )
+		formatString: #,0 €
+		displayFolder: 7 Marketing
+		lineageTag: ef0fa9f6-e923-4987-bf38-b1efd12e94c3
+
+	/// Campaign Spend as a share of Campaign Budget.
+	measure 'Budget Used %' = DIVIDE ( [Campaign Spend], [Campaign Budget] )
+		formatString: 0.0%
+		displayFolder: 7 Marketing
+		lineageTag: 681ec768-1a0f-4094-ae85-f550cf700ea3
+
+	/// Ad impressions.
+	measure Impressions = SUM ( fact_campaign_spend[impressions] )
+		formatString: #,0
+		displayFolder: 7 Marketing
+		lineageTag: ed287b1e-f194-40cf-b171-4ee90e73f180
+
+	/// Ad clicks.
+	measure Clicks = SUM ( fact_campaign_spend[clicks] )
+		formatString: #,0
+		displayFolder: 7 Marketing
+		lineageTag: 2d831687-60aa-4ad9-8989-26d65a939819
+
+	/// Click-through rate: Clicks ÷ Impressions.
+	measure CTR = DIVIDE ( [Clicks], [Impressions] )
+		formatString: 0.00%
+		displayFolder: 7 Marketing
+		lineageTag: 24f889ca-f771-4ef5-9033-af4eab73bcbd
+
+	/// Cost per click: Campaign Spend ÷ Clicks.
+	measure CPC = DIVIDE ( [Campaign Spend], [Clicks] )
+		formatString: #,0.00 €
+		displayFolder: 7 Marketing
+		lineageTag: 79864759-96f8-4c23-bb4c-d3b40d930e8e
+
+	/// Net Sales of each campaign's promoted products while the campaign ran. Attributed revenue, not incremental uplift.
+	measure 'Campaign Sales' =
+			SUMX (
+				VALUES ( dim_campaign[campaign_key] ),
+				VAR StartDate = CALCULATE ( MIN ( dim_campaign[start_date] ) )
+				VAR EndDate = CALCULATE ( MAX ( dim_campaign[end_date] ) )
+				VAR Promoted = CALCULATETABLE ( VALUES ( fact_promotion_coverage[product_key] ) )
+				RETURN
+					CALCULATE (
+						[Net Sales],
+						TREATAS ( Promoted, dim_product[product_key] ),
+						KEEPFILTERS ( DATESBETWEEN ( dim_date[date], StartDate, EndDate ) )
+					)
+			)
+		formatString: #,0 €
+		displayFolder: 7 Marketing
+		lineageTag: 7986e820-d225-446b-8405-7403dafd1c07
+
+	/// Return on ad spend: Campaign Sales ÷ Campaign Spend.
+	measure ROAS = DIVIDE ( [Campaign Sales], [Campaign Spend] )
+		formatString: 0.0
+		displayFolder: 7 Marketing
+		lineageTag: 740973a9-9ee6-4bba-8ad3-9c911aca6ef7
+
+	/// Units in stock at the end of the latest month in context (semi-additive: not summed over time).
+	measure 'Stock Units' =
+			VAR LastMonth = MAX ( fact_inventory[month] )
+			RETURN
+				CALCULATE ( SUM ( fact_inventory[units] ), fact_inventory[month] = LastMonth )
+		formatString: #,0
+		displayFolder: 8 Inventory
+		lineageTag: 8cc9d361-2ae0-4eaa-939e-eee020cf3ba5
+
+	/// Stock Units valued at list price.
+	measure 'Stock Value' = SUMX ( VALUES ( dim_product[product_key] ), [Stock Units] * CALCULATE ( MAX ( dim_product[price] ) ) )
+		formatString: #,0 €
+		displayFolder: 8 Inventory
+		lineageTag: a10f933e-4116-4d3b-9327-696b016cec96
+
+	/// Products with zero stock at the end of the latest month in context. Months without inventory data return blank.
+	measure 'Out-of-Stock Products' =
+			COUNTROWS (
+				FILTER (
+					VALUES ( dim_product[product_key] ),
+					VAR Stock = [Stock Units]
+					RETURN NOT ISBLANK ( Stock ) && Stock = 0
+				)
+			)
+		formatString: #,0
+		displayFolder: 8 Inventory
+		lineageTag: 04c79890-f123-4809-b6c8-e996288cdeac
+
+	/// Average units sold per month, counting only months with sales.
+	measure 'Avg Monthly Units Sold' =
+			AVERAGEX (
+				FILTER ( SUMMARIZE ( dim_date, dim_date[year], dim_date[month] ), [Units Sold] > 0 ),
+				[Units Sold]
+			)
+		formatString: #,0
+		displayFolder: 8 Inventory
+		lineageTag: 3aae2fb4-905b-414e-8361-4ae813e0a044
+
+	/// How many months current stock lasts at the average sales rate.
+	measure 'Months of Cover' = DIVIDE ( [Stock Units], [Avg Monthly Units Sold] )
+		formatString: 0.0
+		displayFolder: 8 Inventory
+		lineageTag: 7538f604-bd94-40a5-a5d4-637d51c3494e
+
+	/// Bar colour for growth charts: blue for growth, red for decline. Used as field-value conditional formatting.
+	measure 'YoY Color' = IF ( [Net Sales YoY %] < 0, "#E34948", "#2A78D6" )
+		displayFolder: 0 Helpers
+		lineageTag: f0028b0b-8122-4386-ba14-2cb81d41fb5f
+
+	/// Net Sales card subtitle: growth versus the same period last year.
+	measure 'KPI Note Net Sales' =
+			VAR g = [Net Sales YoY %]
+			RETURN
+				IF ( ISBLANK ( g ), IF ( HASONEVALUE ( dim_date[year] ), "No prior-year data", "Select one year to compare" ), IF ( g >= 0, "▲ ", "▼ " ) & FORMAT ( g, "+0.0%;-0.0%" ) & " vs last year" )
+		displayFolder: 0 Helpers
+		lineageTag: 99547b73-fb59-49f3-92c1-430bd4461016
+
+	/// Gross Margin % card subtitle: change in percentage points versus last year.
+	measure 'KPI Note Gross Margin' =
+			VAR d = ( [Gross Margin %] - [Gross Margin % PY] ) * 100
+			RETURN
+				IF ( ISBLANK ( [Gross Margin % PY] ), IF ( HASONEVALUE ( dim_date[year] ), "No prior-year data", "Select one year to compare" ), IF ( d >= 0, "▲ ", "▼ " ) & FORMAT ( d, "+0.0;-0.0" ) & " pp vs last year" )
+		displayFolder: 0 Helpers
+		lineageTag: 4295859a-561a-4d44-ac65-5cd191ac08d1
+
+	/// Target Attainment card subtitle: euro gap to the sales target.
+	measure 'KPI Note Target' =
+			VAR v = [Target Variance]
+			RETURN
+				IF ( ISBLANK ( v ), "No target", IF ( v >= 0, "▲ ", "▼ " ) & FORMAT ( v, "+#,0 €;-#,0 €" ) & " vs target" )
+		displayFolder: 0 Helpers
+		lineageTag: dde07cd0-4b22-4f7d-a91b-cb4e1f95435b
+
+	/// Orders card subtitle: average order value.
+	measure 'KPI Note Orders' = "Avg order value " & FORMAT ( [Avg Order Value], "#,0 €" )
+		displayFolder: 0 Helpers
+		lineageTag: 503762e1-02aa-4653-9361-b9129a943b88
+
+	/// Active Customers card subtitle: customers with their first order in the period.
+	measure 'KPI Note Customers' = FORMAT ( [New Customers], "#,0" ) & " new in period"
+		displayFolder: 0 Helpers
+		lineageTag: b7c2c0b3-8d36-4380-ae88-71a5b0abe401
+
+	/// Discounts card subtitle: discounts as a share of gross sales.
+	measure 'KPI Note Discount' = FORMAT ( [Discount %], "0.0%" ) & " of gross sales"
+		displayFolder: 0 Helpers
+		lineageTag: 135e3caf-66a9-4415-82e2-44e9f43c162c
+
+	/// Gross Margin card subtitle: margin % and change in percentage points versus last year.
+	measure 'KPI Note Margin Value' =
+			VAR d = ( [Gross Margin %] - [Gross Margin % PY] ) * 100
+			RETURN
+				FORMAT ( [Gross Margin %], "0.0%" ) & " of net sales"
+					& IF ( ISBLANK ( [Gross Margin % PY] ), "", IF ( d >= 0, " · ▲ ", " · ▼ " ) & FORMAT ( d, "+0.0;-0.0" ) & " pp" )
+		displayFolder: 0 Helpers
+		lineageTag: 832d3c0a-c55c-4a38-85ac-6a686f5b052f
+
+	/// Units Sold card subtitle: average net price per unit.
+	measure 'KPI Note Units' = FORMAT ( DIVIDE ( [Net Sales], [Units Sold] ), "#,0.00 €" ) & " net per unit"
+		displayFolder: 0 Helpers
+		lineageTag: 87bc2f21-92e7-4cdf-8ebd-883aaebed5c3
+
+	/// Net Sales of the customers in the selected tier (customers ranked by Net Sales in the current filters).
+	measure 'Net Sales by Tier' =
+			VAR Lo = SELECTEDVALUE ( customer_tier[Lower] )
+			VAR Hi = SELECTEDVALUE ( customer_tier[Upper] )
+			VAR Customers =
+				FILTER ( ADDCOLUMNS ( VALUES ( fact_sales[customer_id] ), "@sales", [Net Sales] ), [@sales] > 0 )
+			VAR N = COUNTROWS ( Customers )
+			VAR Ranked = ADDCOLUMNS ( Customers, "@rank", RANKX ( Customers, [@sales], , DESC ) )
+			RETURN
+				SUMX ( FILTER ( Ranked, [@rank] > N * Lo && [@rank] <= N * Hi ), [@sales] )
+		formatString: #,0 €
+		displayFolder: 5 Customers
+		lineageTag: e60b48e7-f0d6-4014-9a8c-259a304a4788
+
+	/// Share of total Net Sales generated by the selected customer tier.
+	measure 'Share of Net Sales' = DIVIDE ( [Net Sales by Tier], CALCULATE ( [Net Sales], REMOVEFILTERS ( customer_tier ) ) )
+		formatString: 0.0%
+		displayFolder: 5 Customers
+		lineageTag: bcef0e70-d358-462b-a710-80fa44a6d4a4
+
+	/// Share of Net Sales generated by the top 20% of active customers (customer concentration).
+	measure 'Top 20% Customer Share' =
+			VAR Customers =
+				FILTER ( ADDCOLUMNS ( VALUES ( fact_sales[customer_id] ), "@sales", [Net Sales] ), [@sales] > 0 )
+			VAR TopCustomers = ROUNDUP ( COUNTROWS ( Customers ) * 0.2, 0 )
+			RETURN
+				DIVIDE ( SUMX ( TOPN ( TopCustomers, Customers, [@sales], DESC ), [@sales] ), [Net Sales] )
+		formatString: 0.0%
+		displayFolder: 5 Customers
+		lineageTag: b3a99a6c-4634-40fe-82ea-c2afaf3193cf
+
+	/// Open Receivables card subtitle: overdue share.
+	measure 'KPI Note Receivables' = FORMAT ( [Overdue %], "0.0%" ) & " already overdue"
+		displayFolder: 0 Helpers
+		lineageTag: 517d57aa-cf7e-4007-8135-79ea143142af
+
+	/// All open receivables in the selected ageing bucket(s) as of the Last Data Date. Ignores the date filter: an open-items list always shows everything still unpaid.
+	measure 'Receivables by Ageing' =
+			VAR AsOfDate = [Last Data Date]
+			VAR Lo = MIN ( receivable_ageing[Min Days] )
+			VAR Hi = MAX ( receivable_ageing[Max Days] )
+			VAR OpenItems =
+				FILTER (
+					ADDCOLUMNS (
+						CALCULATETABLE (
+							FILTER (
+								fact_order_process,
+								NOT ISBLANK ( fact_order_process[invoice_date] ) && ISBLANK ( fact_order_process[pay_date] )
+							),
+							REMOVEFILTERS ( dim_date )
+						),
+						"@overdue", INT ( AsOfDate - ( fact_order_process[invoice_date]
+							+ SWITCH ( RELATED ( dim_customer[payment_terms] ), "Net 15", 15, "Net 30", 30, "Net 60", 60, 0 ) ) )
+					),
+					[@overdue] >= Lo && [@overdue] <= Hi
+				)
+			RETURN
+				CALCULATE (
+					[Net Sales],
+					TREATAS ( SELECTCOLUMNS ( OpenItems, "@order", fact_order_process[order_id] ), fact_sales[order_id] ),
+					REMOVEFILTERS ( dim_date )
+				)
+		formatString: #,0 €
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 5ec8c9a7-a55c-4be4-8bc3-3d2abb54aeeb
+
+	/// Average calendar days from (first) shipment to final delivery.
+	measure 'Avg Days Ship to Deliver' =
+			AVERAGEX (
+				FILTER ( fact_order_process, NOT ISBLANK ( fact_order_process[delivery_date] ) ),
+				DATEDIFF ( fact_order_process[ship_date], fact_order_process[delivery_date], DAY )
+			)
+		formatString: 0.0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 065ea5e9-07ad-4380-b543-5eb52e2ab1a8
+
+	/// Average days spent in the selected order-to-cash step.
+	measure 'Avg Days in Step' =
+			SWITCH (
+				SELECTEDVALUE ( process_step[Step Order] ),
+				1, [Avg Days to Ship],
+				2, [Avg Days Ship to Deliver],
+				3, [Avg Days Invoice to Payment]
+			)
+		formatString: 0.0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 124d1a5a-b6be-4eec-b7aa-18eed9f4ced9
+
+	/// Average days from invoice to payment, dated by the PAYMENT date (uses the inactive pay_date relationship). Avoids the bias of recent order months where slow payers have not paid yet.
+	measure 'Avg Days to Pay by Payment Date' = CALCULATE ( [Avg Days Invoice to Payment], USERELATIONSHIP ( fact_order_process[pay_date], dim_date[date] ) )
+		formatString: 0.0
+		displayFolder: 6 Order-to-Cash
+		lineageTag: b6498890-0504-41ec-88f7-61f02e20181a
+
+	/// Bar colour for the ageing chart: ordinal blue ramp, light = not yet due, dark = most overdue.
+	measure 'Ageing Color' =
+			SWITCH (
+				SELECTEDVALUE ( receivable_ageing[Bucket Order] ),
+				1, "#86B6EF",
+				2, "#5598E7",
+				3, "#2A78D6",
+				4, "#1C5CAB",
+				5, "#104281"
+			)
+		displayFolder: 0 Helpers
+		lineageTag: cc856915-12e6-4abb-8bad-8491597a1892
+
+	/// Overdue Receivables card subtitle: all open receivables as of the Last Data Date.
+	measure 'KPI Note Overdue' = "of " & FORMAT ( CALCULATE ( [Open Receivables], REMOVEFILTERS ( dim_date ) ), "#,0 €" ) & " open (all invoices)"
+		displayFolder: 0 Helpers
+		lineageTag: 4ef71ddd-5503-4899-919f-10e151ee1b1a
+
+	/// Overdue receivables as of the Last Data Date across ALL open invoices (ignores the date filter), so it matches the ageing chart.
+	measure 'Overdue Receivables As Of' = CALCULATE ( [Overdue Receivables], REMOVEFILTERS ( dim_date ) )
+		formatString: #,0 €
+		displayFolder: 6 Order-to-Cash
+		lineageTag: 06e2949b-1014-4c4e-98f5-892194e20dff
+
+	/// Campaign Spend card subtitle: share of the campaign budget used.
+	measure 'KPI Note Budget' = FORMAT ( [Budget Used %], "0.0%" ) & " of budget used"
+		displayFolder: 0 Helpers
+		lineageTag: af398a2b-c824-4069-b960-9474e10a953e
+
+	/// Stock Value card subtitle: months of stock cover.
+	measure 'KPI Note Stock' = FORMAT ( [Months of Cover], "0.0" ) & " months of cover"
+		displayFolder: 0 Helpers
+		lineageTag: 7e70c1da-d0fd-4556-b343-a1126ebc606b
+
+	column Column
+		isHidden
+		formatString: 0
+		lineageTag: 11e9aa0d-47b3-4aa9-b451-a902f7131729
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _measures = calculated
+		mode: import
+		source = Row("Column", BLANK())
+
+	annotation PBI_Id = 5bf9bc910b594b218e1feed0853c3ae3
+
+	annotation 436ba87b-9c83-4389-a31b-ebd06a36be98 = {"Expression":null}
+
+	annotation 277cc1b9-af89-4597-8e15-cacc25c0886b = To use special characters in a calculated table name, enclose the entire name in brackets ( [] ) and add a ] to any closing brackets in the name.
+

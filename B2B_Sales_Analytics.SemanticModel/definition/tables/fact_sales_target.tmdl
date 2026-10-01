@@ -1,0 +1,39 @@
+table fact_sales_target
+	lineageTag: bb6157d2-67f1-49aa-9784-1d4fedec2de6
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: bb37f4c1-14d5-4441-88d7-03934e4e46b8
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column target_revenue
+		dataType: int64
+		formatString: 0
+		lineageTag: 7a4fccbf-929a-4646-ad1f-a7c85151aac7
+		summarizeBy: sum
+		sourceColumn: target_revenue
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_sales_target = m
+		mode: import
+		queryGroup: 03_Facts
+		source =
+				let
+				    Source = sales_targets,
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Period", "date"}, {"TargetRevenue", "target_revenue"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

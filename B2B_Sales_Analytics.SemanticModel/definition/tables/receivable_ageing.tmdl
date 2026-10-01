@@ -1,0 +1,36 @@
+/// Ageing buckets for open receivables: days past the due date (invoice date + payment terms) as of the Last Data Date.
+table receivable_ageing
+	lineageTag: 10c4d20f-17f3-4b3c-b870-9bee80d16f65
+
+	column Bucket
+		dataType: string
+		lineageTag: 08c7e13d-8779-4b3b-a565-f9997d3d51ab
+		summarizeBy: none
+		sourceColumn: [Bucket]
+		sortByColumn: 'Bucket Order'
+
+	column 'Bucket Order'
+		dataType: int64
+		isHidden
+		lineageTag: 196985de-b359-43b9-9507-e5610a3b7afa
+		summarizeBy: none
+		sourceColumn: [Bucket Order]
+
+	column 'Min Days'
+		dataType: int64
+		isHidden
+		lineageTag: 4e344e86-2af1-48cb-8ea9-b478941047b3
+		summarizeBy: none
+		sourceColumn: [Min Days]
+
+	column 'Max Days'
+		dataType: int64
+		isHidden
+		lineageTag: 005c6b51-b9c0-4854-b5aa-376befda6d35
+		summarizeBy: none
+		sourceColumn: [Max Days]
+
+	partition receivable_ageing = calculated
+		mode: import
+		source = DATATABLE ( "Bucket", STRING, "Bucket Order", INTEGER, "Min Days", INTEGER, "Max Days", INTEGER, { { "Not yet due", 1, -99999, 0 }, { "1-30 days", 2, 1, 30 }, { "31-60 days", 3, 31, 60 }, { "61-90 days", 4, 61, 90 }, { "> 90 days", 5, 91, 99999 } } )
+

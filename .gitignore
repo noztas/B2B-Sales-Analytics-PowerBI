@@ -1,0 +1,10 @@
+# Power BI Desktop local files
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Python
+__pycache__/
+*.pyc
+
+# Schema cache of tools/validate_pbir.py
+tools/schema_cache/

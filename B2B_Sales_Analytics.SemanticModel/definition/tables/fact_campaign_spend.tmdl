@@ -1,0 +1,71 @@
+table fact_campaign_spend
+	lineageTag: 8beea6d4-8406-41ed-9550-850bd253434a
+
+	column campaign_key
+		dataType: int64
+		formatString: 0
+		lineageTag: 19302ab7-5968-4c0f-80d7-052606b99948
+		summarizeBy: none
+		sourceColumn: campaign_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 8d56189c-616e-479e-a548-ac906ce74d04
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column impressions
+		dataType: int64
+		formatString: 0
+		lineageTag: ce825564-e83c-4152-a047-b906e534f97a
+		summarizeBy: sum
+		sourceColumn: impressions
+
+		annotation SummarizationSetBy = Automatic
+
+	column clicks
+		dataType: int64
+		formatString: 0
+		lineageTag: 0010433b-1789-4400-95d1-b6c27af79392
+		summarizeBy: sum
+		sourceColumn: clicks
+
+		annotation SummarizationSetBy = Automatic
+
+	column spend
+		dataType: double
+		lineageTag: 9abbbda2-6f09-48ac-8cda-f2810e148e01
+		summarizeBy: sum
+		sourceColumn: spend
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_campaign_spend = m
+		mode: import
+		queryGroup: 03_Facts
+		source =
+				let
+				    Source = CAMPAIGN_LOG,
+				    #"Merged Queries" = Table.NestedJoin(Source, {"CampaignName"}, dim_campaign, {"campaign_name"}, "dim_campaign", JoinKind.LeftOuter),
+				    #"Expanded dim_campaign" = Table.ExpandTableColumn(#"Merged Queries", "dim_campaign", {"campaign_key"}, {"dim_campaign.campaign_key"}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Expanded dim_campaign",{"CampaignName", "Channel", "StartDate", "EndDate", "Budget", "dim_campaign.campaign_key", "Date", "Impressions", "Clicks", "Spend"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Reordered Columns",{"CampaignName", "Channel", "StartDate", "EndDate", "Budget"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"dim_campaign.campaign_key", "campaign_key"}, {"Date", "date"}, {"Impressions", "impressions"}, {"Clicks", "clicks"}, {"Spend", "spend"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

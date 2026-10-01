@@ -1,0 +1,54 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		fastCombine
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup 01_Stage
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup 02_Dims
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup 03_Facts
+
+	annotation PBI_QueryGroupOrder = 2
+
+queryGroup 04_Support
+
+	annotation PBI_QueryGroupOrder = 3
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["RawDataPath","Address","CAMPAIGN_LOG","campaign_skus","CUST_MASTER","cities","customer_contacts","exchange_rates","invoice_lines","inventory","INVOICES","order_line_items","ORDERS_2025","ORDERS_2026","payments","products","sales_targets","regions","security","subcategories","shipments","user_details","dim_geo","dim_order_flags","dim_customer","dim_product","dim_campaign","orders","channels","fact_order_process","fact_sales","fact_inventory","fact_campaign_spend","fact_promotion_coverage","fact_sales_target"]
+
+annotation PBI_ProTooling = ["TMDLView_Desktop","DevMode"]
+
+ref table security
+ref table dim_customer
+ref table dim_product
+ref table dim_order_flags
+ref table fact_sales
+ref table dim_geo
+ref table fact_inventory
+ref table dim_campaign
+ref table fact_campaign_spend
+ref table fact_promotion_coverage
+ref table fact_order_process
+ref table fact_sales_target
+ref table dim_date
+ref table _measures
+ref table customer_tier
+ref table receivable_ageing
+ref table process_step
+
+ref role 'Regional Access'
+
+ref cultureInfo en-US
+
