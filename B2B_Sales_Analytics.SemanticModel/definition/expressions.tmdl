@@ -60,20 +60,6 @@ expression customer_contacts =
 
 	annotation PBI_ResultType = Exception
 
-expression regions =
-		let
-		    Source = Excel.Workbook(File.Contents(RawDataPath), null, true),
-		    regions_Sheet = Source{[Item="regions",Kind="Sheet"]}[Data],
-		    #"Changed Type" = Table.TransformColumnTypes(regions_Sheet,{{"Column1", type text}})
-		in
-		    #"Changed Type"
-	lineageTag: e1485245-dd89-46b9-a599-c5eb36fb1a30
-	queryGroup: 01_Stage
-
-	annotation PBI_NavigationStepName = Navigation
-
-	annotation PBI_ResultType = Table
-
 expression user_details =
 		let
 		    Source = Excel.Workbook(File.Contents(RawDataPath), null, true),
@@ -239,21 +225,6 @@ expression campaign_skus =
 
 	annotation PBI_ResultType = Exception
 
-expression invoice_lines =
-		let
-		    Source = Excel.Workbook(File.Contents(RawDataPath), null, true),
-		    invoice_lines_Sheet = Source{[Item="invoice_lines",Kind="Sheet"]}[Data],
-		    #"Promoted Headers" = Table.PromoteHeaders(invoice_lines_Sheet, [PromoteAllScalars=true]),
-		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"InvoiceLineID", type text}, {"InvoiceID", type text}, {"ProductName", type text}, {"Amount", type number}})
-		in
-		    #"Changed Type"
-	lineageTag: 526ef00c-9a53-4769-89f1-4ff59ef211dd
-	queryGroup: 01_Stage
-
-	annotation PBI_NavigationStepName = Navigation
-
-	annotation PBI_ResultType = Table
-
 expression INVOICES =
 		let
 		    Source = Excel.Workbook(File.Contents(RawDataPath), null, true),
@@ -294,21 +265,6 @@ expression shipments =
 		in
 		    #"Grouped Rows"
 	lineageTag: 27c35fdf-efb9-4c21-a8ba-7d1beb54067e
-	queryGroup: 01_Stage
-
-	annotation PBI_NavigationStepName = Navigation
-
-	annotation PBI_ResultType = Table
-
-expression exchange_rates =
-		let
-		    Source = Excel.Workbook(File.Contents(RawDataPath), null, true),
-		    exchange_rates_Sheet = Source{[Item="exchange_rates",Kind="Sheet"]}[Data],
-		    #"Promoted Headers" = Table.PromoteHeaders(exchange_rates_Sheet, [PromoteAllScalars=true]),
-		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Currency", type text}, {"Rate", type number}, {"Date", type date}})
-		in
-		    #"Changed Type"
-	lineageTag: 1ffd0820-221f-489c-9219-285997ea801d
 	queryGroup: 01_Stage
 
 	annotation PBI_NavigationStepName = Navigation

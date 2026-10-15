@@ -67,8 +67,12 @@ table _measures
 		displayFolder: 2 Profitability
 		lineageTag: 00049c82-bfea-4b21-9956-69e02c6e516d
 
-	/// Planned revenue. Targets are set per month, so use this at month level or above.
-	measure 'Sales Target' = SUM ( fact_sales_target[target_revenue] )
+	/// Planned revenue. Targets are set per month for the whole company, so use this at month level or above. Blank when customers are filtered (Region/Segment slicer or row-level security), because there is no regional target to compare with.
+	measure 'Sales Target' =
+			VAR CustomersFiltered = ISCROSSFILTERED ( dim_customer )
+			VAR RlsActive = COUNTROWS ( ALL ( dim_customer[region] ) ) < COUNTROWS ( ALL ( security[region] ) )
+			RETURN
+				IF ( NOT CustomersFiltered && NOT RlsActive, SUM ( fact_sales_target[target_revenue] ) )
 		formatString: #,0 €
 		displayFolder: 3 Targets
 		lineageTag: 9275f0a4-0ee2-48a3-9c8f-9df89f1a0d4e
@@ -386,7 +390,11 @@ table _measures
 	measure 'KPI Note Target' =
 			VAR v = [Target Variance]
 			RETURN
-				IF ( ISBLANK ( v ), "No target", IF ( v >= 0, "▲ ", "▼ " ) & FORMAT ( v, "+#,0 €;-#,0 €" ) & " vs target" )
+				IF (
+					ISBLANK ( v ),
+					IF ( ISBLANK ( SUM ( fact_sales_target[target_revenue] ) ), "No target", "Target is company-wide only" ),
+					IF ( v >= 0, "▲ ", "▼ " ) & FORMAT ( v, "+#,0 €;-#,0 €" ) & " vs target"
+				)
 		displayFolder: 0 Helpers
 		lineageTag: dde07cd0-4b22-4f7d-a91b-cb4e1f95435b
 
@@ -555,8 +563,4 @@ table _measures
 		source = Row("Column", BLANK())
 
 	annotation PBI_Id = 5bf9bc910b594b218e1feed0853c3ae3
-
-	annotation 436ba87b-9c83-4389-a31b-ebd06a36be98 = {"Expression":null}
-
-	annotation 277cc1b9-af89-4597-8e15-cacc25c0886b = To use special characters in a calculated table name, enclose the entire name in brackets ( [] ) and add a ] to any closing brackets in the name.
 

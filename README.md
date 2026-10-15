@@ -5,12 +5,15 @@ mid-sized B2B wholesaler operating in Germany, Austria and Switzerland (DACH).
 
 ![Executive Overview](screenshots/executive-overview.png)
 
+**[⬇ Download the report (.pbix)](https://github.com/noztas/B2B-Sales-Analytics-PowerBI/raw/main/B2B_Sales_Analytics.pbix)**
+and open it in Power BI Desktop. The data is included ([details](#how-to-open)).
+
 **At a glance**
 
 - **5 report pages** for five audiences: management, sales, key accounts, finance and logistics, marketing and purchasing
 - **Star schema** with 6 fact tables, 6 dimensions and role-playing dates (4 inactive relationships used with `USERELATIONSHIP`)
-- **66 DAX measures** in 9 display folders, each with a description and each used in the report
-- **Row-level security** by sales region
+- **66 DAX measures** in 9 display folders, each with a description and each used in the report or by another measure
+- **Row-level security** by sales region on all customer-based data
 - **GDPR-minded:** customer contact data is removed in Power Query, not just hidden
 - **Report as code:** saved as a Power BI Project (PBIP/PBIR + TMDL), so every change is reviewable in Git
 - **Accessible design:** colour-blind-safe palette, alt text on every chart, ▲/▼ arrows instead of colour alone
@@ -112,7 +115,7 @@ All relationships are many-to-one with single-direction filtering.
 | **Split shipments grouped to one row per order** in Power Query | Otherwise orders delivered in two parts are double-counted |
 | **Customer contact columns removed** (name, email, phone, street) | GDPR data minimisation (*Datensparsamkeit*): the report never needs them |
 | **Auto date/time off, implicit measures discouraged** | One explicit date table; every number in the report comes from a defined measure |
-| **One parameter (`RawDataPath`) for the data source** | Whoever clones the repo changes one value instead of 21 queries |
+| **One parameter (`RawDataPath`) for the data source** | Whoever clones the repo changes one value instead of 18 queries |
 | **One `due_date` column** (invoice date + payment-term days) | The due-date rule lives in one place; late-payment, overdue and ageing measures all reuse it |
 
 ### Measures
@@ -134,14 +137,20 @@ All measures live in
 
 ### Row-level security
 
-The role **Regional Access** limits every page to the viewer's sales region:
+The role **Regional Access** limits customers, and with them all sales and order-to-cash figures, to
+the viewer's sales region:
 
 ```dax
 [region] = LOOKUPVALUE ( security[region], security[email], USERPRINCIPALNAME () )
 ```
 
+Campaigns, inventory and the sales target are company-wide data with no customer or region, so they are
+not filtered. The target is only set for the whole company, so `Sales Target` turns blank (card subtitle:
+*Target is company-wide only*) whenever customers are filtered, by the Region/Segment slicers or by
+row-level security. That way a region's sales are never compared with the whole company's plan.
+
 To test it in Power BI Desktop: **Home → View as → Other user** `katharina.huber@arka.example`,
-tick **Regional Access**. Every page now shows only the Süd region.
+tick **Regional Access**. Sales, customer and order-to-cash figures now show only the Süd region.
 
 ### How I validated the numbers
 
@@ -186,8 +195,10 @@ screenshots/                          page screenshots used in this README
 
 ## How to open
 
-**Quick look:** download `B2B_Sales_Analytics.pbix` and open it in Power BI Desktop. The data is
-already included.
+**Quick look:** [download `B2B_Sales_Analytics.pbix`](https://github.com/noztas/B2B-Sales-Analytics-PowerBI/raw/main/B2B_Sales_Analytics.pbix)
+and open it in [Power BI Desktop](https://www.microsoft.com/en-us/power-platform/products/power-bi/desktop)
+(free, Windows only). The data is already included, so no refresh is needed. Without Power BI, see the
+screenshots above.
 
 **Work on the project:**
 1. Clone the repository and open `B2B_Sales_Analytics.pbip` in Power BI Desktop (2025 or later).

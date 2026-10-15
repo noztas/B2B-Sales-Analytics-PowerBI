@@ -26,7 +26,7 @@ queryGroup 04_Support
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBI_QueryOrder = ["RawDataPath","Address","CAMPAIGN_LOG","campaign_skus","CUST_MASTER","cities","customer_contacts","exchange_rates","invoice_lines","inventory","INVOICES","order_line_items","ORDERS_2025","ORDERS_2026","payments","products","sales_targets","regions","security","subcategories","shipments","user_details","dim_geo","dim_order_flags","dim_customer","dim_product","dim_campaign","orders","channels","fact_order_process","fact_sales","fact_inventory","fact_campaign_spend","fact_promotion_coverage","fact_sales_target"]
+annotation PBI_QueryOrder = ["RawDataPath","Address","CAMPAIGN_LOG","campaign_skus","CUST_MASTER","cities","customer_contacts","inventory","INVOICES","order_line_items","ORDERS_2025","ORDERS_2026","payments","products","sales_targets","security","subcategories","shipments","user_details","dim_geo","dim_order_flags","dim_customer","dim_product","dim_campaign","orders","channels","fact_order_process","fact_sales","fact_inventory","fact_campaign_spend","fact_promotion_coverage","fact_sales_target"]
 
 annotation PBI_ProTooling = ["TMDLView_Desktop","DevMode"]
 
