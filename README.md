@@ -174,6 +174,7 @@ an inventory table that Power BI silently excluded from refresh.
 ### What I'd do next
 
 - Replace the last-year measures with a **calculation group** for time intelligence (one definition for every measure).
+- Add a **rolling 12-month Active Customers** view to show whether the customer base is really growing (the current measure counts customers per period), plus an **At-Risk Customers** list per account manager (active, but no order in the last 3 months) so sales knows whom to call before a customer is lost.
 - Turn the fixed business rules (7-day delivery target, 3-day payment grace period) into **parameters** the business can change.
 - Publish to the Power BI service and set up a **scheduled refresh** and **deployment pipeline** (dev → test → prod).
 
